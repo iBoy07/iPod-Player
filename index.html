@@ -178,6 +178,26 @@ function addMix(){
  var m=getMixes();m.push({n:n,u:uri});localStorage.setItem("mixes",JSON.stringify(m));
  back();push(mixScreen());
 }
+async function diag(){
+ var out=[{l:"Version 4"}];
+ out.push({l:"Startbild: "+(($("art").dataset.k||"-").slice(8,32))});
+ try{
+  var j=await api("GET","/me/player");
+  if(!j||!j.item){out.push({l:"Kein Titel aktiv"})}
+  else{
+   var a=j.item.album||{},im=a.images||[];
+   out.push({l:"Titel: "+j.item.name});
+   out.push({l:"Album-Bilder: "+im.length});
+   var u=im.length?(im[1]||im[0]).url:"";
+   if(u){
+    var r=await new Promise(function(res){var i=new Image();i.onload=function(){res("lädt OK "+i.width+"px")};i.onerror=function(){res("Laden FEHLGESCHLAGEN")};i.src=u;setTimeout(function(){res("Zeitüberschreitung")},6000)});
+    out.push({l:"Bild: "+r});
+   }
+  }
+ }catch(e){out.push({l:"Player: "+msg(e)})}
+ try{var p=await api("GET","/me/playlists?limit=5"),f=(p.items||[])[0];out.push({l:"Playlist-Bilder: "+(f&&f.images?f.images.length:"fehlt")})}catch(e){out.push({l:"Playlists: "+msg(e)})}
+ return out;
+}
 function musicScreen(){return{t:"Musik",items:[
  {l:"Playlists",go:function(){return{t:"Playlists",load:loadPlaylists}}},
  {l:"Lieblingstitel",go:function(){return{t:"Lieblingstitel",load:loadLiked}}},
@@ -185,6 +205,7 @@ function musicScreen(){return{t:"Musik",items:[
  {l:"Spotify-Mixe",go:function(){return mixScreen()}}]}}
 function settingsScreen(){return{t:"Einstellungen",items:[
  {l:"Themes",go:function(){return themeScreen()}},
+ {l:"Diagnose",go:function(){return{t:"Diagnose",load:diag}}},
  {l:"Abmelden",act:function(){T=null;localStorage.removeItem("tok");stack=[{s:{t:"iPod",items:rootItems()},sel:0}];render()}}]}}
 var THEMES=[["Klassik Weiß","klassik"],["Schwarz","schwarz"],["Rot","rot"],["Mint","mint"],["Nacht","nacht"]];
 function setTheme(id){document.body.setAttribute("data-theme",id);localStorage.setItem("theme",id)}
