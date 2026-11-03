@@ -69,7 +69,7 @@ var SC="user-read-playback-state user-modify-playback-state user-read-currently-
 var cid=localStorage.getItem("cid")||"";
 var T=null;try{T=JSON.parse(localStorage.getItem("tok")||"null")}catch(e){}
 if(localStorage.getItem("sv")!=="2"){T=null;localStorage.removeItem("tok");localStorage.setItem("sv","2")}
-var N=null,sdkDev=null,player=null,vt=null;
+var N=null,sdkDev=null,player=null,vt=null,pref=localStorage.getItem("dev")||"";
 
 function b64(b){return btoa(String.fromCharCode.apply(null,new Uint8Array(b))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
 async function login(){
@@ -101,7 +101,7 @@ function msg(e){return e&&e.status===404?"Kein Gerät aktiv":e&&e.status===403?"
 
 async function device(){
  var j=await api("GET","/me/player/devices"),d=(j&&j.devices)||[];
- var a=d.filter(function(x){return x.is_active})[0]||d.filter(function(x){return x.id===sdkDev})[0]||d[0];
+ var a=d.filter(function(x){return x.id===pref})[0]||d.filter(function(x){return x.is_active})[0]||d.filter(function(x){return x.id===sdkDev})[0]||d[0];
  if(!a)throw{status:404};return a.id;
 }
 async function doPlay(o){
@@ -133,6 +133,7 @@ function rootItems(){
   
   
   {l:"Läuft gerade",go:function(){return{t:"np",np:1}}},
+  {l:"Gerät",go:function(){return{t:"Gerät wählen",load:loadDevices}}},
   {l:"Shuffle",act:function(){return ctl(function(){return api("PUT","/me/player/shuffle?state="+!(N&&N.shuffle))})}},
   
   {l:"Einstellungen",go:function(){return settingsScreen()}}
@@ -181,8 +182,14 @@ function addMix(){
  var m=getMixes();m.push({n:n,u:uri});localStorage.setItem("mixes",JSON.stringify(m));
  back();push(mixScreen());
 }
+async function loadDevices(){
+ var j=await api("GET","/me/player/devices"),d=(j&&j.devices)||[];
+ if(!d.length)return[{l:"Spotify-App öffnen"}];
+ var ty={Smartphone:"Handy",Computer:"Computer",Speaker:"Lautsprecher",Tablet:"Tablet"};
+ return d.map(function(x){return{l:(x.id===pref?"✓ ":"")+x.name+" ("+(ty[x.type]||x.type)+")",act:function(){pref=x.id;localStorage.setItem("dev",x.id);ctl(function(){return api("PUT","/me/player",{device_ids:[x.id],play:false})});back()}}});
+}
 async function diag(){
- var out=[{l:"Version 5"}];
+ var out=[{l:"Version 6"}];
  out.push({l:"Startbild: "+(($("art").dataset.k||"-").slice(8,32))});
  try{
   var j=await api("GET","/me/player");
@@ -266,7 +273,7 @@ setInterval(refreshNP,5000);
 function startSdk(){
  if(!T||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent))return;
  window.onSpotifyWebPlaybackSDKReady=function(){
-  player=new Spotify.Player({name:"iPod Player",getOAuthToken:function(cb){token().then(cb)},volume:.6});
+  player=new Spotify.Player({name:"iPod Player (Browser)",getOAuthToken:function(cb){token().then(cb)},volume:.6});
   player.addListener("ready",function(d){sdkDev=d.device_id});
   player.connect();
  };
