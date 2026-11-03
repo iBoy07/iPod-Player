@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>iPod für Spotify</title>
+<style>
+:root{--bg:#e4e4ea;--ink:#222;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17171b;--ink:#eee}}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,Helvetica,Arial,sans-serif;-webkit-user-select:none;user-select:none}
+.ipod{width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;background:linear-gradient(160deg,#fbfbfb,#cdced3);padding:16px 16px 22px;max-width:520px;margin:0 auto}
+.screen{background:#c8d6bd;border:3px solid #7f858c;border-radius:8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;color:#18281a;font-size:18px}
+.bar{display:flex;justify-content:space-between;padding:3px 8px;font-weight:700;font-size:13px;background:linear-gradient(#ececec,#a8a8a8);border-bottom:1px solid #777;color:#222}
+.list{flex:1;overflow:hidden}
+.row{display:flex;justify-content:space-between;padding:6px 10px;white-space:nowrap;overflow:hidden}
+.row span:first-child{overflow:hidden;text-overflow:ellipsis}
+.row.sel{background:linear-gradient(#53a0f0,#1c5fb8);color:#fff}
+.np{padding:12px;display:flex;flex-direction:column;gap:4px}
+.np b{font-size:19px}
+.prog{height:10px;border:1px solid #333;border-radius:5px;overflow:hidden;margin-top:10px;background:#e7efe2}
+.prog i{display:block;height:100%;background:linear-gradient(#53a0f0,#1c5fb8)}
+.tm{display:flex;justify-content:space-between;font-size:12px}
+.wheel{width:min(80vw,40vh);height:min(80vw,40vh);flex:none;border-radius:50%;background:#f6f6f8;margin:18px auto 0;position:relative;touch-action:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.2),0 1px 0 #fff}
+.wheel button{position:absolute;border:0;background:none;font-weight:700;font-size:13px;color:#7a7a80;padding:10px;cursor:pointer}
+#bM{top:6px;left:50%;transform:translateX(-50%)}#bP{bottom:6px;left:50%;transform:translateX(-50%)}
+#bL{left:6px;top:50%;transform:translateY(-50%)}#bR{right:6px;top:50%;transform:translateY(-50%)}
+#bC{left:50%;top:50%;width:36%;height:36%;margin:-18%;border-radius:50%;background:linear-gradient(#ececee,#c6c6cb);box-shadow:0 1px 3px rgba(0,0,0,.3);padding:0}
+#setup{position:fixed;inset:0;background:var(--bg);color:var(--ink);padding:24px;overflow:auto;display:none;box-sizing:border-box;-webkit-user-select:text;user-select:text}
+#setup input{width:100%;box-sizing:border-box;padding:10px;font-size:16px;margin:6px 0 12px}
+#setup button{padding:10px 16px;font-size:16px}
+#setup code{background:rgba(128,128,128,.2);padding:2px 4px;word-break:break-all}
+</style></head><body>
+<div class="ipod">
+ <div class="screen"><div class="bar"><span id="ttl">iPod</span><span id="ind">▶</span></div><div class="list" id="body"></div></div>
+ <div class="wheel" id="wheel"><button id="bM">MENU</button><button id="bL">⏮</button><button id="bR">⏭</button><button id="bP">⏯</button><button id="bC" aria-label="Auswählen"></button></div>
+</div>
+<div id="setup">
+ <h2>Einmalige Einrichtung</h2>
+ <ol>
+  <li>Auf <b>developer.spotify.com/dashboard</b> „Create app“ wählen.</li>
+  <li>Als Redirect URI genau das hier eintragen:<br><code id="ru"></code></li>
+  <li>Bei „APIs/SDKs“ <b>Web API</b> und <b>Web Playback SDK</b> ankreuzen, speichern.</li>
+  <li>Die <b>Client ID</b> hier einfügen:</li>
+ </ol>
+ <input id="cidIn" placeholder="Client ID" autocomplete="off">
+ <button id="cidBtn">Speichern</button>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)};
+var REDIR=location.origin+location.pathname;
+var SC="user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative streaming user-read-email user-read-private";
+var cid=localStorage.getItem("cid")||"";
+var T=null;try{T=JSON.parse(localStorage.getItem("tok")||"null")}catch(e){}
+var N=null,sdkDev=null,player=null,vt=null;
+
+function b64(b){return btoa(String.fromCharCode.apply(null,new Uint8Array(b))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+async function login(){
+ var v=b64(crypto.getRandomValues(new Uint8Array(48)));localStorage.setItem("ver",v);
+ var ch=b64(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v)));
+ location.href="https://accounts.spotify.com/authorize?"+new URLSearchParams({response_type:"code",client_id:cid,scope:SC,redirect_uri:REDIR,code_challenge_method:"S256",code_challenge:ch});
+}
+async function tokReq(p){
+ var r=await fetch("https://accounts.spotify.com/api/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(Object.assign({client_id:cid},p))});
+ var j=await r.json();if(!r.ok)throw j;
+ T={a:j.access_token,r:j.refresh_token||(T&&T.r),e:Date.now()+j.expires_in*1000-60000};
+ localStorage.setItem("tok",JSON.stringify(T));
+}
+async function token(){
+ if(!T)return null;
+ if(Date.now()>T.e){try{await tokReq({grant_type:"refresh_token",refresh_token:T.r})}catch(e){T=null;localStorage.removeItem("tok");return null}}
+ return T.a;
+}
+async function api(m,p,b){
+ var t=await token();if(!t)throw{status:401};
+ var r=await fetch(p.indexOf("http")===0?p:"https://api.spotify.com/v1"+p,{method:m,headers:Object.assign({Authorization:"Bearer "+t},b?{"Content-Type":"application/json"}:{}),body:b?JSON.stringify(b):undefined});
+ if(r.status===204||r.status===202)return null;
+ var x=await r.text(),j=null;try{j=JSON.parse(x)}catch(e){}
+ if(!r.ok)throw{status:r.status,j:j};
+ return j;
+}
+async function pages(p,max){var out=[],u=p;for(var i=0;u&&i<(max||6);i++){var j=await api("GET",u);out=out.concat(j.items||[]);u=j.next}return out}
+function msg(e){return e&&e.status===404?"Kein Gerät aktiv":e&&e.status===403?"Kein Zugriff (Premium?)":e&&e.status===401?"Bitte neu anmelden":"Fehler"}
+
+async function device(){
+ var j=await api("GET","/me/player/devices"),d=(j&&j.devices)||[];
+ var a=d.filter(function(x){return x.is_active})[0]||d.filter(function(x){return x.id===sdkDev})[0]||d[0];
+ if(!a)throw{status:404};return a.id;
+}
+async function doPlay(o){
+ var dev=await device();
+ await api("PUT","/me/player/play?device_id="+dev,{context_uri:o.ctx,offset:{position:o.i}});
+ setTimeout(refreshNP,800);
+}
+async function refreshNP(){
+ if(!T)return;
+ try{var j=await api("GET","/me/player");
+  if(!j||!j.item){N=null}else{N={name:j.item.name,artist:(j.item.artists||[]).map(function(a){return a.name}).join(", "),playing:j.is_playing,pos:j.progress_ms/1000,dur:j.item.duration_ms/1000,vol:j.device?j.device.volume_percent:50,shuffle:j.shuffle_state}}
+ }catch(e){}
+ render();
+}
+async function ctl(fn){try{await fn();setTimeout(refreshNP,600)}catch(e){flash(msg(e))}}
+function flash(t){$("ind").textContent=t;setTimeout(render,2000)}
+
+function fmt(n){n=Math.max(0,Math.floor(n));return Math.floor(n/60)+":"+("0"+n%60).slice(-2)}
+function rootItems(){
+ if(!T)return[{l:"Mit Spotify anmelden",act:login},{l:"Client ID ändern",act:function(){$("setup").style.display="block"}}];
+ return[
+  {l:"Playlists",go:function(){return{t:"Playlists",load:loadPlaylists}}},
+  {l:"Läuft gerade",go:function(){return{t:"np",np:1}}},
+  {l:"Zufallswiedergabe",act:function(){return ctl(function(){return api("PUT","/me/player/shuffle?state="+!(N&&N.shuffle))})}},
+  {l:"Abmelden",act:function(){T=null;localStorage.removeItem("tok");stack=[{s:{t:"iPod",items:rootItems()},sel:0}];render()}}
+ ];
+}
+async function loadPlaylists(){
+ var l=await pages("/me/playlists?limit=50",4);
+ return l.filter(Boolean).map(function(p){return{l:p.name,go:function(){return{t:p.name,load:function(){return loadTracks(p)}}}}});
+}
+async function loadTracks(p){
+ var l;
+ try{l=await pages("/playlists/"+p.id+"/items?limit=100",5)}catch(e){l=await pages("/playlists/"+p.id+"/tracks?limit=100",5)}
+ var out=[];l.forEach(function(x){var t=x&&(x.item||x.track);if(t&&t.name)out.push({l:t.name,play:{ctx:p.uri,i:out.length}})});
+ if(!out.length)out=[{l:"Keine Titel sichtbar"}];
+ return out;
+}
+
+var stack=[{s:{t:"iPod",items:rootItems()},sel:0}];
+function cur(){return stack[stack.length-1]}
+function push(s){
+ stack.push({s:s,sel:0});
+ if(s.load){s.items=[{l:"Lädt…"}];render();s.load().then(function(it){s.items=it;render()}).catch(function(e){s.items=[{l:msg(e)}];render()})}
+ else render();
+ if(s.np)refreshNP();
+}
+function render(){
+ var c=cur(),b=$("body");
+ $("ttl").textContent=c.s.np?"Läuft gerade":c.s.t;
+ $("ind").textContent=N&&N.playing?"▶":"❚❚";
+ if(c.s.np){
+  if(!N){b.innerHTML='<div class="np"><b>Nichts aktiv</b><span>Starte einen Titel über Playlists.</span></div>';return}
+  b.innerHTML='<div class="np"><b>'+esc(N.name)+'</b><span>'+esc(N.artist)+'</span><div class="prog"><i style="width:'+Math.min(100,N.pos/N.dur*100)+'%"></i></div><div class="tm"><span>'+fmt(N.pos)+'</span><span>-'+fmt(N.dur-N.pos)+'</span></div><div class="tm"><span>Lautstärke</span><span>'+Math.round(N.vol)+'%</span></div><div class="prog"><i style="width:'+N.vol+'%"></i></div></div>';return;
+ }
+ b.innerHTML=c.s.items.map(function(it,i){return'<div class="row'+(i===c.sel?' sel':'')+'"><span>'+esc(it.l)+'</span><span>'+(it.go?"›":"")+'</span></div>'}).join("");
+ var r=b.children[c.sel];if(r&&b.firstChild){b.firstChild.style.marginTop=-Math.max(0,r.offsetTop-80)+"px"}
+}
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
+function move(d){var c=cur();if(c.s.np){if(!N)return;N.vol=Math.max(0,Math.min(100,N.vol+d*5));render();clearTimeout(vt);vt=setTimeout(function(){ctl(function(){return api("PUT","/me/player/volume?volume_percent="+Math.round(N.vol))})},300);return}
+ var n=c.sel+d;if(n<0||n>=c.s.items.length)return;c.sel=n;render()}
+function select(){
+ if(player&&player.activateElement)player.activateElement();
+ var c=cur();if(c.s.np){return}
+ var it=c.s.items[c.sel];if(!it)return;
+ if(it.go)push(it.go());
+ else if(it.act)it.act();
+ else if(it.play){ctl(function(){return doPlay(it.play)});push({t:"np",np:1})}
+}
+function back(){if(stack.length>1){stack.pop();render()}}
+$("bC").onclick=select;$("bM").onclick=back;
+$("bP").onclick=function(){ctl(function(){return N&&N.playing?api("PUT","/me/player/pause"):api("PUT","/me/player/play")})};
+$("bL").onclick=function(){ctl(function(){return api("POST","/me/player/previous")})};
+$("bR").onclick=function(){ctl(function(){return api("POST","/me/player/next")})};
+
+var w=$("wheel"),last=null,acc=0;
+function ang(e){var r=w.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI}
+w.addEventListener("pointerdown",function(e){if(e.target.closest("button"))return;last=ang(e);acc=0;w.setPointerCapture(e.pointerId)});
+w.addEventListener("pointermove",function(e){if(last===null)return;var a=ang(e),d=a-last;if(d>180)d-=360;if(d<-180)d+=360;last=a;acc+=d;
+ while(acc>=24){acc-=24;move(1)}while(acc<=-24){acc+=24;move(-1)}});
+w.addEventListener("pointerup",function(){last=null});w.addEventListener("pointercancel",function(){last=null});
+
+setInterval(function(){if(N&&N.playing){N.pos=Math.min(N.dur,N.pos+1);if(cur().s.np)render()}},1000);
+setInterval(refreshNP,5000);
+
+function startSdk(){
+ if(!T||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent))return;
+ window.onSpotifyWebPlaybackSDKReady=function(){
+  player=new Spotify.Player({name:"iPod Player",getOAuthToken:function(cb){token().then(cb)},volume:.6});
+  player.addListener("ready",function(d){sdkDev=d.device_id});
+  player.connect();
+ };
+ var s=document.createElement("script");s.src="https://sdk.scdn.co/spotify-player.js";document.body.appendChild(s);
+}
+
+$("ru").textContent=REDIR;
+$("cidBtn").onclick=function(){var v=$("cidIn").value.trim();if(!v)return;cid=v;localStorage.setItem("cid",v);$("setup").style.display="none";stack=[{s:{t:"iPod",items:rootItems()},sel:0}];render()};
+(async function(){
+ if(!cid){$("setup").style.display="block"}
+ var code=new URLSearchParams(location.search).get("code");
+ if(code&&cid){try{await tokReq({grant_type:"authorization_code",code:code,redirect_uri:REDIR,code_verifier:localStorage.getItem("ver")})}catch(e){}history.replaceState(null,"",REDIR)}
+ stack=[{s:{t:"iPod",items:rootItems()},sel:0}];render();startSdk();refreshNP();
+})();
+</script></body></html>
