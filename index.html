@@ -23,19 +23,22 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,Helvetica,A
 .row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;white-space:nowrap;overflow:hidden}
 .row span:first-child{overflow:hidden;text-overflow:ellipsis}
 .row.sel{background:linear-gradient(var(--s1),var(--s2));color:#fff}
-.np{padding:12px;display:flex;flex-direction:column;gap:4px}
+.np{padding:14px;display:flex;flex-direction:column;gap:14px;height:100%;box-sizing:border-box}
+.np .prog{margin-top:auto}
+.g{display:flex;flex-direction:column;gap:6px}
 .np b{font-size:19px}
 .npt{display:flex;gap:10px;align-items:flex-start}
-.cov{width:min(34vw,130px);height:min(34vw,130px);border-radius:4px;object-fit:cover;background:rgba(0,0,0,.15);flex:none}
-.inf{display:flex;flex-direction:column;gap:2px;min-width:0}
-.inf span{font-size:14px}
-.inf .sm{font-size:12px;opacity:.8}
+.cov{width:min(40vw,160px);height:min(40vw,160px);border-radius:4px;object-fit:cover;background:rgba(0,0,0,.15);flex:none}
+.inf{display:flex;flex-direction:column;justify-content:space-between;align-self:stretch;gap:14px;min-width:0}
+.inf span{font-size:15px;line-height:1.3}
+.inf .sm{font-size:13px;opacity:.8}
 .th{width:30px;height:30px;border-radius:3px;margin-right:8px;object-fit:cover;vertical-align:middle}
 .prog{height:10px;border:1px solid #333;border-radius:5px;overflow:hidden;margin-top:10px;background:#e7efe2}
 .prog i{display:block;height:100%;background:linear-gradient(var(--s1),var(--s2))}
 .tm{display:flex;justify-content:space-between;font-size:12px}
 .wheel{width:min(80vw,40vh);height:min(80vw,40vh);flex:none;border-radius:50%;background:var(--w);margin:18px auto 0;position:relative;touch-action:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.2),0 1px 0 #fff}
-.wheel button{position:absolute;border:0;background:none;font-weight:700;font-size:13px;color:var(--wl);padding:10px;cursor:pointer}
+.wheel button svg{display:block}
+.wheel button{letter-spacing:1px;position:absolute;border:0;background:none;font-weight:700;font-size:13px;color:var(--wl);padding:10px;cursor:pointer}
 #bM{top:6px;left:50%;transform:translateX(-50%)}#bP{bottom:6px;left:50%;transform:translateX(-50%)}
 #bL{left:6px;top:50%;transform:translateY(-50%)}#bR{right:6px;top:50%;transform:translateY(-50%)}
 #bC{left:50%;top:50%;width:36%;height:36%;margin:-18%;border-radius:50%;background:linear-gradient(var(--c1),var(--c2));box-shadow:0 1px 3px rgba(0,0,0,.3);padding:0}
@@ -46,7 +49,7 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,Helvetica,A
 </style></head><body>
 <div class="ipod">
  <div class="screen"><div class="bar"><span id="ttl">iPod</span><span id="ind">▶</span></div><div class="list" id="body"></div><div id="art"></div><div id="vol"><span>Lautstärke</span><div class="prog"><i id="volBar" style="width:0"></i></div></div></div>
- <div class="wheel" id="wheel"><button id="bM">MENU</button><button id="bL">⏮</button><button id="bR">⏭</button><button id="bP">⏯</button><button id="bC" aria-label="Auswählen"></button></div>
+ <div class="wheel" id="wheel"><button id="bM">MENU</button><button id="bL" aria-label="Zurück"><svg viewBox="0 0 24 16" width="28" height="19" fill="currentColor"><rect x="0" y="1" width="3" height="14"/><path d="M13 1v14L4 8z"/><path d="M23 1v14L14 8z"/></svg></button><button id="bR" aria-label="Weiter"><svg viewBox="0 0 24 16" width="28" height="19" fill="currentColor"><path d="M1 1v14l9-7z"/><path d="M11 1v14l9-7z"/><rect x="21" y="1" width="3" height="14"/></svg></button><button id="bP" aria-label="Play/Pause"><svg viewBox="0 0 24 16" width="28" height="19" fill="currentColor"><path d="M1 1v14l10-7z"/><rect x="14" y="1" width="3.5" height="14"/><rect x="20" y="1" width="3.5" height="14"/></svg></button><button id="bC" aria-label="Auswählen"></button></div>
 </div>
 <div id="setup">
  <h2>Einmalige Einrichtung</h2>
@@ -144,7 +147,7 @@ async function loadPlaylists(){
 }
 async function loadTracks(p){
  var l;
- try{try{l=await pages("/playlists/"+p.id+"/items?limit=100",5)}catch(e){l=await pages("/playlists/"+p.id+"/tracks?limit=100",5)}}catch(e){return[{l:"▶ Playlist abspielen",play:{ctx:p.uri,i:0,whole:1}}]}
+ try{try{l=await pages("/playlists/"+p.id+"/items?limit=100",5)}catch(e){l=await pages("/playlists/"+p.id+"/tracks?limit=100",5)}}catch(e){return[{l:"Playlist abspielen",play:{ctx:p.uri,i:0,whole:1}}]}
  var out=[];l.forEach(function(x){var t=x&&(x.item||x.track);if(t&&t.name)out.push({l:t.name,play:{ctx:p.uri,i:out.length}})});
  if(!out.length)out=[{l:"Keine Titel sichtbar"}];
  return out;
@@ -179,7 +182,7 @@ function addMix(){
  back();push(mixScreen());
 }
 async function diag(){
- var out=[{l:"Version 4"}];
+ var out=[{l:"Version 5"}];
  out.push({l:"Startbild: "+(($("art").dataset.k||"-").slice(8,32))});
  try{
   var j=await api("GET","/me/player");
@@ -228,7 +231,7 @@ function render(){
  if(rt){var k=N&&N.img||"-";if(ar.dataset.k!==k){ar.dataset.k=k;ar.innerHTML=N&&N.img?'<img src="'+N.img+'" alt="">':'<div class="ph">♪</div>'}}
  if(c.s.np){
   if(!N){b.innerHTML='<div class="np"><b>Nichts aktiv</b><span>Starte einen Titel über Playlists.</span></div>';return}
-  b.innerHTML='<div class="np"><div class="npt">'+(N.img?'<img class="cov" src="'+N.img+'" alt="">':'')+'<div class="inf"><b>'+esc(N.name)+'</b><span>'+esc(N.artist)+'</span><span>'+esc(N.album)+'</span><span class="sm">'+esc(N.meta)+'</span><span class="sm">'+esc(N.dev)+'</span></div></div><div class="prog"><i style="width:'+Math.min(100,N.pos/N.dur*100)+'%"></i></div><div class="tm"><span>'+fmt(N.pos)+'</span><span>-'+fmt(N.dur-N.pos)+'</span></div></div>';return;
+  b.innerHTML='<div class="np"><div class="npt">'+(N.img?'<img class="cov" src="'+N.img+'" alt="">':'')+'<div class="inf"><div class="g"><b>'+esc(N.name)+'</b><span>'+esc(N.artist)+'</span><span>'+esc(N.album)+'</span></div><div class="g"><span class="sm">'+esc(N.meta)+'</span><span class="sm">'+esc(N.dev)+'</span></div></div></div><div class="prog"><i style="width:'+Math.min(100,N.pos/N.dur*100)+'%"></i></div><div class="tm"><span>'+fmt(N.pos)+'</span><span>-'+fmt(N.dur-N.pos)+'</span></div></div>';return;
  }
  b.innerHTML=c.s.items.map(function(it,i){return'<div class="row'+(i===c.sel?' sel':'')+'"><span>'+(it.img?'<img class="th" src="'+it.img+'" alt="">':'')+esc(it.l)+'</span><span>'+(it.go?"›":"")+'</span></div>'}).join("");
  var r=b.children[c.sel];if(r&&b.firstChild){b.firstChild.style.marginTop=-Math.max(0,r.offsetTop-80)+"px"}
