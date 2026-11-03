@@ -3,34 +3,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>iPod für Spotify</title>
 <style>
-:root{--bg:#e4e4ea;--ink:#222;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#e4e4ea;--ink:#222;--b1:#fbfbfb;--b2:#cdced3;--sc:#c8d6bd;--st:#18281a;--s1:#53a0f0;--s2:#1c5fb8;--w:#f6f6f8;--wl:#7a7a80;--c1:#ececee;--c2:#c6c6cb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17171b;--ink:#eee}}
 html,body{margin:0;height:100%}
+body[data-theme="schwarz"]{--b1:#3a3a3f;--b2:#0e0e10;--sc:#dfe9f5;--st:#10202f;--w:#1d1d20;--wl:#b5b5bb;--c1:#3a3a3e;--c2:#222225}
+body[data-theme="rot"]{--b1:#e0404c;--b2:#8f1621;--sc:#d9e4f2;--st:#10243a;--w:#f3ebec;--wl:#8a6a6e}
+body[data-theme="mint"]{--b1:#cdeedd;--b2:#86b9a2;--w:#f2f8f5}
+body[data-theme="nacht"]{--b1:#4a5b78;--b2:#1b2536;--sc:#0d2b4a;--st:#bfe4ff;--s1:#2f8cf0;--s2:#0f56b8;--w:#e9edf4}
 body{background:var(--bg);color:var(--ink);font-family:-apple-system,Helvetica,Arial,sans-serif;-webkit-user-select:none;user-select:none}
-.ipod{width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;background:linear-gradient(160deg,#fbfbfb,#cdced3);padding:16px 16px 22px;max-width:520px;margin:0 auto}
-.screen{background:#c8d6bd;border:3px solid #7f858c;border-radius:8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;color:#18281a;font-size:18px}
+.ipod{width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;background:linear-gradient(160deg,var(--b1),var(--b2));padding:16px 16px 22px;max-width:520px;margin:0 auto}
+.screen{position:relative;background:var(--sc);border:3px solid #7f858c;border-radius:8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;color:var(--st);font-size:18px}
+#vol{position:absolute;left:12%;right:12%;bottom:14px;background:rgba(20,20,20,.88);color:#fff;border-radius:10px;padding:8px 10px;font-size:13px;display:none}
+#vol .prog{margin:6px 0 0;background:#444;border-color:#999}
 .bar{display:flex;justify-content:space-between;padding:3px 8px;font-weight:700;font-size:13px;background:linear-gradient(#ececec,#a8a8a8);border-bottom:1px solid #777;color:#222}
 .list{flex:1;overflow:hidden}
 .row{display:flex;justify-content:space-between;padding:6px 10px;white-space:nowrap;overflow:hidden}
 .row span:first-child{overflow:hidden;text-overflow:ellipsis}
-.row.sel{background:linear-gradient(#53a0f0,#1c5fb8);color:#fff}
+.row.sel{background:linear-gradient(var(--s1),var(--s2));color:#fff}
 .np{padding:12px;display:flex;flex-direction:column;gap:4px}
 .np b{font-size:19px}
 .prog{height:10px;border:1px solid #333;border-radius:5px;overflow:hidden;margin-top:10px;background:#e7efe2}
-.prog i{display:block;height:100%;background:linear-gradient(#53a0f0,#1c5fb8)}
+.prog i{display:block;height:100%;background:linear-gradient(var(--s1),var(--s2))}
 .tm{display:flex;justify-content:space-between;font-size:12px}
-.wheel{width:min(80vw,40vh);height:min(80vw,40vh);flex:none;border-radius:50%;background:#f6f6f8;margin:18px auto 0;position:relative;touch-action:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.2),0 1px 0 #fff}
-.wheel button{position:absolute;border:0;background:none;font-weight:700;font-size:13px;color:#7a7a80;padding:10px;cursor:pointer}
+.wheel{width:min(80vw,40vh);height:min(80vw,40vh);flex:none;border-radius:50%;background:var(--w);margin:18px auto 0;position:relative;touch-action:none;box-shadow:inset 0 2px 6px rgba(0,0,0,.2),0 1px 0 #fff}
+.wheel button{position:absolute;border:0;background:none;font-weight:700;font-size:13px;color:var(--wl);padding:10px;cursor:pointer}
 #bM{top:6px;left:50%;transform:translateX(-50%)}#bP{bottom:6px;left:50%;transform:translateX(-50%)}
 #bL{left:6px;top:50%;transform:translateY(-50%)}#bR{right:6px;top:50%;transform:translateY(-50%)}
-#bC{left:50%;top:50%;width:36%;height:36%;margin:-18%;border-radius:50%;background:linear-gradient(#ececee,#c6c6cb);box-shadow:0 1px 3px rgba(0,0,0,.3);padding:0}
+#bC{left:50%;top:50%;width:36%;height:36%;margin:-18%;border-radius:50%;background:linear-gradient(var(--c1),var(--c2));box-shadow:0 1px 3px rgba(0,0,0,.3);padding:0}
 #setup{position:fixed;inset:0;background:var(--bg);color:var(--ink);padding:24px;overflow:auto;display:none;box-sizing:border-box;-webkit-user-select:text;user-select:text}
 #setup input{width:100%;box-sizing:border-box;padding:10px;font-size:16px;margin:6px 0 12px}
 #setup button{padding:10px 16px;font-size:16px}
 #setup code{background:rgba(128,128,128,.2);padding:2px 4px;word-break:break-all}
 </style></head><body>
 <div class="ipod">
- <div class="screen"><div class="bar"><span id="ttl">iPod</span><span id="ind">▶</span></div><div class="list" id="body"></div></div>
+ <div class="screen"><div class="bar"><span id="ttl">iPod</span><span id="ind">▶</span></div><div class="list" id="body"></div><div id="vol"><span>Lautstärke</span><div class="prog"><i id="volBar" style="width:0"></i></div></div></div>
  <div class="wheel" id="wheel"><button id="bM">MENU</button><button id="bL">⏮</button><button id="bR">⏭</button><button id="bP">⏯</button><button id="bC" aria-label="Auswählen"></button></div>
 </div>
 <div id="setup">
@@ -47,9 +53,10 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,Helvetica,A
 <script>
 var $=function(i){return document.getElementById(i)};
 var REDIR=location.origin+location.pathname;
-var SC="user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative streaming user-read-email user-read-private";
+var SC="user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative user-library-read streaming user-read-email user-read-private";
 var cid=localStorage.getItem("cid")||"";
 var T=null;try{T=JSON.parse(localStorage.getItem("tok")||"null")}catch(e){}
+if(localStorage.getItem("sv")!=="2"){T=null;localStorage.removeItem("tok");localStorage.setItem("sv","2")}
 var N=null,sdkDev=null,player=null,vt=null;
 
 function b64(b){return btoa(String.fromCharCode.apply(null,new Uint8Array(b))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
@@ -87,41 +94,81 @@ async function device(){
 }
 async function doPlay(o){
  var dev=await device();
- await api("PUT","/me/player/play?device_id="+dev,{context_uri:o.ctx,offset:{position:o.i}});
+ await api("PUT","/me/player/play?device_id="+dev,o.uris?{uris:o.uris}:o.whole?{context_uri:o.ctx}:{context_uri:o.ctx,offset:{position:o.i}});
  setTimeout(refreshNP,800);
 }
 async function refreshNP(){
  if(!T)return;
  try{var j=await api("GET","/me/player");
-  if(!j||!j.item){N=null}else{N={name:j.item.name,artist:(j.item.artists||[]).map(function(a){return a.name}).join(", "),playing:j.is_playing,pos:j.progress_ms/1000,dur:j.item.duration_ms/1000,vol:j.device?j.device.volume_percent:50,shuffle:j.shuffle_state}}
+  if(!j||!j.item){N=null}else{var ov=N&&N.vl&&Date.now()-N.vl<4000?N.vol:null;N={ctx:j.context?j.context.uri:null,vl:ov!==null?N.vl:0,name:j.item.name,artist:(j.item.artists||[]).map(function(a){return a.name}).join(", "),playing:j.is_playing,pos:j.progress_ms/1000,dur:j.item.duration_ms/1000,vol:ov!==null?ov:(j.device?j.device.volume_percent:50),shuffle:j.shuffle_state}}
  }catch(e){}
  render();
 }
 async function ctl(fn){try{await fn();setTimeout(refreshNP,600)}catch(e){flash(msg(e))}}
 function flash(t){$("ind").textContent=t;setTimeout(render,2000)}
+var vh=null;
+function showVol(){var v=$("vol");v.style.display="block";$("volBar").style.width=N.vol+"%";v.firstChild.textContent="Lautstärke "+Math.round(N.vol)+"%";clearTimeout(vh);vh=setTimeout(function(){v.style.display="none"},1500)}
 
 function fmt(n){n=Math.max(0,Math.floor(n));return Math.floor(n/60)+":"+("0"+n%60).slice(-2)}
 function rootItems(){
  if(!T)return[{l:"Mit Spotify anmelden",act:login},{l:"Client ID ändern",act:function(){$("setup").style.display="block"}}];
  return[
   {l:"Playlists",go:function(){return{t:"Playlists",load:loadPlaylists}}},
+  {l:"Lieblingstitel",go:function(){return{t:"Lieblingstitel",load:loadLiked}}},
+  {l:"Spotify-Mixe",go:function(){return mixScreen()}},
+  {l:"Alben",go:function(){return{t:"Alben",load:loadAlbums}}},
   {l:"Läuft gerade",go:function(){return{t:"np",np:1}}},
   {l:"Zufallswiedergabe",act:function(){return ctl(function(){return api("PUT","/me/player/shuffle?state="+!(N&&N.shuffle))})}},
+  {l:"Themes",go:function(){return themeScreen()}},
   {l:"Abmelden",act:function(){T=null;localStorage.removeItem("tok");stack=[{s:{t:"iPod",items:rootItems()},sel:0}];render()}}
  ];
 }
 async function loadPlaylists(){
- var l=await pages("/me/playlists?limit=50",4);
- return l.filter(Boolean).map(function(p){return{l:p.name,go:function(){return{t:p.name,load:function(){return loadTracks(p)}}}}});
+ var me=await api("GET","/me"),l=(await pages("/me/playlists?limit=50",4)).filter(Boolean),g={own:[],other:[],sp:[]},out=[];
+ l.forEach(function(p){var o=p.owner&&p.owner.id;(o==="spotify"?g.sp:o===me.id?g.own:g.other).push(p)});
+ [["Meine Playlists",g.own],["Gespeichert",g.other],["Von Spotify",g.sp]].forEach(function(x){if(x[1].length)out.push({l:x[0]+" ("+x[1].length+")",go:function(){return{t:x[0],items:x[1].map(plItem)}}})});
+ return out.length?out:[{l:"Keine Playlists"}];
+ function plItem(p){return{l:p.name,go:function(){return{t:p.name,load:function(){return loadTracks(p)}}}}}
 }
 async function loadTracks(p){
  var l;
- try{l=await pages("/playlists/"+p.id+"/items?limit=100",5)}catch(e){l=await pages("/playlists/"+p.id+"/tracks?limit=100",5)}
+ try{try{l=await pages("/playlists/"+p.id+"/items?limit=100",5)}catch(e){l=await pages("/playlists/"+p.id+"/tracks?limit=100",5)}}catch(e){return[{l:"▶ Playlist abspielen",play:{ctx:p.uri,i:0,whole:1}}]}
  var out=[];l.forEach(function(x){var t=x&&(x.item||x.track);if(t&&t.name)out.push({l:t.name,play:{ctx:p.uri,i:out.length}})});
  if(!out.length)out=[{l:"Keine Titel sichtbar"}];
  return out;
 }
 
+async function loadLiked(){
+ var l=await pages("/me/tracks?limit=50",8),ids=[];
+ l.forEach(function(x){if(x&&x.track&&x.track.uri)ids.push([x.track.name,x.track.uri])});
+ if(!ids.length)return[{l:"Keine Lieblingstitel"}];
+ var uris=ids.map(function(t){return t[1]});
+ return ids.map(function(t,i){return{l:t[0],play:{uris:uris.slice(i,i+100)}}});
+}
+async function loadAlbums(){
+ var l=await pages("/me/albums?limit=50",4);
+ var out=l.filter(function(x){return x&&x.album}).map(function(x){return{l:x.album.name,play:{ctx:x.album.uri,i:0,whole:1}}});
+ return out.length?out:[{l:"Keine Alben"}];
+}
+function getMixes(){try{return JSON.parse(localStorage.getItem("mixes")||"[]")}catch(e){return[]}}
+function mixScreen(){
+ var m=getMixes(),items=m.map(function(x){return{l:x.n,play:{ctx:x.u,i:0,whole:1}}});
+ items.push({l:"+ Mix hinzufügen",act:addMix});
+ if(m.length)items.push({l:"Mixe löschen",act:function(){localStorage.removeItem("mixes");back();push(mixScreen())}});
+ return{t:"Spotify-Mixe",items:items};
+}
+function addMix(){
+ var u=prompt("Playlist-Link einfügen (Spotify: Teilen → Link kopieren). Leer lassen = aktuell gespielte Playlist");
+ if(u===null)return;
+ var id=(u.match(/playlist[\/:]([A-Za-z0-9]+)/)||[])[1],uri=id?"spotify:playlist:"+id:(N&&N.ctx);
+ if(!uri||uri.indexOf("spotify:playlist:")!==0)return flash("Keine Playlist");
+ var n=prompt("Name, z.B. Daylist");if(!n)return;
+ var m=getMixes();m.push({n:n,u:uri});localStorage.setItem("mixes",JSON.stringify(m));
+ back();push(mixScreen());
+}
+var THEMES=[["Klassik Weiß","klassik"],["Schwarz","schwarz"],["Rot","rot"],["Mint","mint"],["Nacht","nacht"]];
+function setTheme(id){document.body.setAttribute("data-theme",id);localStorage.setItem("theme",id)}
+function themeScreen(){return{t:"Themes",items:THEMES.map(function(t){return{l:t[0],act:function(){setTheme(t[1])}}})}}
 var stack=[{s:{t:"iPod",items:rootItems()},sel:0}];
 function cur(){return stack[stack.length-1]}
 function push(s){
@@ -136,13 +183,13 @@ function render(){
  $("ind").textContent=N&&N.playing?"▶":"❚❚";
  if(c.s.np){
   if(!N){b.innerHTML='<div class="np"><b>Nichts aktiv</b><span>Starte einen Titel über Playlists.</span></div>';return}
-  b.innerHTML='<div class="np"><b>'+esc(N.name)+'</b><span>'+esc(N.artist)+'</span><div class="prog"><i style="width:'+Math.min(100,N.pos/N.dur*100)+'%"></i></div><div class="tm"><span>'+fmt(N.pos)+'</span><span>-'+fmt(N.dur-N.pos)+'</span></div><div class="tm"><span>Lautstärke</span><span>'+Math.round(N.vol)+'%</span></div><div class="prog"><i style="width:'+N.vol+'%"></i></div></div>';return;
+  b.innerHTML='<div class="np"><b>'+esc(N.name)+'</b><span>'+esc(N.artist)+'</span><div class="prog"><i style="width:'+Math.min(100,N.pos/N.dur*100)+'%"></i></div><div class="tm"><span>'+fmt(N.pos)+'</span><span>-'+fmt(N.dur-N.pos)+'</span></div></div>';return;
  }
  b.innerHTML=c.s.items.map(function(it,i){return'<div class="row'+(i===c.sel?' sel':'')+'"><span>'+esc(it.l)+'</span><span>'+(it.go?"›":"")+'</span></div>'}).join("");
  var r=b.children[c.sel];if(r&&b.firstChild){b.firstChild.style.marginTop=-Math.max(0,r.offsetTop-80)+"px"}
 }
 function esc(s){return String(s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
-function move(d){var c=cur();if(c.s.np){if(!N)return;N.vol=Math.max(0,Math.min(100,N.vol+d*5));render();clearTimeout(vt);vt=setTimeout(function(){ctl(function(){return api("PUT","/me/player/volume?volume_percent="+Math.round(N.vol))})},300);return}
+function move(d){var c=cur();if(c.s.np){if(!N)return;N.vol=Math.max(0,Math.min(100,N.vol+d*5));N.vl=Date.now();showVol();clearTimeout(vt);vt=setTimeout(function(){ctl(function(){return api("PUT","/me/player/volume?volume_percent="+Math.round(N.vol))})},300);return}
  var n=c.sel+d;if(n<0||n>=c.s.items.length)return;c.sel=n;render()}
 function select(){
  if(player&&player.activateElement)player.activateElement();
@@ -184,6 +231,6 @@ $("cidBtn").onclick=function(){var v=$("cidIn").value.trim();if(!v)return;cid=v;
  if(!cid){$("setup").style.display="block"}
  var code=new URLSearchParams(location.search).get("code");
  if(code&&cid){try{await tokReq({grant_type:"authorization_code",code:code,redirect_uri:REDIR,code_verifier:localStorage.getItem("ver")})}catch(e){}history.replaceState(null,"",REDIR)}
- stack=[{s:{t:"iPod",items:rootItems()},sel:0}];render();startSdk();refreshNP();
+ stack=[{s:{t:"iPod",items:rootItems()},sel:0}];setTheme(localStorage.getItem("theme")||"klassik");render();startSdk();refreshNP();
 })();
 </script></body></html>
