@@ -97,11 +97,13 @@ async function api(m,p,b){
  return j;
 }
 async function pages(p,max){var out=[],u=p;for(var i=0;u&&i<(max||6);i++){var j=await api("GET",u);out=out.concat(j.items||[]);u=j.next}return out}
-function msg(e){return e&&e.status===404?"Kein Gerät aktiv":e&&e.status===403?"Kein Zugriff (Premium?)":e&&e.status===401?"Bitte neu anmelden":"Fehler"}
+function msg(e){return e&&e.status===404?"Spotify-App öffnen":e&&e.status===403?"Kein Zugriff (Premium?)":e&&e.status===401?"Bitte neu anmelden":"Fehler"}
 
 async function device(){
  var j=await api("GET","/me/player/devices"),d=(j&&j.devices)||[];
- var a=d.filter(function(x){return x.id===pref})[0]||d.filter(function(x){return x.is_active})[0]||d.filter(function(x){return x.id===sdkDev})[0]||d[0];
+ var mob=/iPhone|iPad|Android/i.test(navigator.userAgent),a=d.filter(function(x){return x.id===pref})[0];
+ if(!a&&mob){var ph=d.filter(function(x){return x.type==="Smartphone"||x.type==="Tablet"});a=ph.filter(function(x){return x.is_active})[0]||ph[0]}
+ if(!a&&!mob)a=d.filter(function(x){return x.is_active})[0]||d.filter(function(x){return x.id===sdkDev})[0]||d[0];
  if(!a)throw{status:404};return a.id;
 }
 async function doPlay(o){
@@ -189,7 +191,7 @@ async function loadDevices(){
  return d.map(function(x){return{l:(x.id===pref?"✓ ":"")+x.name+" ("+(ty[x.type]||x.type)+")",act:function(){pref=x.id;localStorage.setItem("dev",x.id);ctl(function(){return api("PUT","/me/player",{device_ids:[x.id],play:false})});back()}}});
 }
 async function diag(){
- var out=[{l:"Version 6"}];
+ var out=[{l:"Version 7"}];
  out.push({l:"Startbild: "+(($("art").dataset.k||"-").slice(8,32))});
  try{
   var j=await api("GET","/me/player");
