@@ -184,14 +184,18 @@ function addMix(){
  var m=getMixes();m.push({n:n,u:uri});localStorage.setItem("mixes",JSON.stringify(m));
  back();push(mixScreen());
 }
+function openSp(){location.href="spotify://"}
 async function loadDevices(){
  var j=await api("GET","/me/player/devices"),d=(j&&j.devices)||[];
- if(!d.length)return[{l:"Spotify-App öffnen"}];
+ if(!d.length)return[{l:"Spotify-App öffnen",act:openSp}];
  var ty={Smartphone:"Handy",Computer:"Computer",Speaker:"Lautsprecher",Tablet:"Tablet"};
- return d.map(function(x){return{l:(x.id===pref?"✓ ":"")+x.name+" ("+(ty[x.type]||x.type)+")",act:function(){pref=x.id;localStorage.setItem("dev",x.id);ctl(function(){return api("PUT","/me/player",{device_ids:[x.id],play:false})});back()}}});
+ var mob=/iPhone|iPad|Android/i.test(navigator.userAgent),hasPh=d.some(function(x){return x.type==="Smartphone"||x.type==="Tablet"});
+ var lst=d.map(function(x){return{l:(x.id===pref?"✓ ":"")+x.name+" ("+(ty[x.type]||x.type)+")",act:function(){pref=x.id;localStorage.setItem("dev",x.id);ctl(function(){return api("PUT","/me/player",{device_ids:[x.id],play:false})});back()}}});
+ if(mob&&!hasPh)lst.push({l:"iPhone fehlt: Spotify öffnen",act:openSp});
+ return lst;
 }
 async function diag(){
- var out=[{l:"Version 7"}];
+ var out=[{l:"Version 8"}];
  out.push({l:"Startbild: "+(($("art").dataset.k||"-").slice(8,32))});
  try{
   var j=await api("GET","/me/player");
@@ -271,6 +275,7 @@ w.addEventListener("pointerup",function(){last=null});w.addEventListener("pointe
 
 setInterval(function(){if(N&&N.playing){N.pos=Math.min(N.dur,N.pos+1);if(cur().s.np)render()}},1000);
 setInterval(refreshNP,5000);
+document.addEventListener("visibilitychange",function(){if(document.hidden)return;var s=cur().s;refreshNP();if(s.load===loadDevices){s.load().then(function(it){s.items=it;render()}).catch(function(){})}});
 
 function startSdk(){
  if(!T||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent))return;
